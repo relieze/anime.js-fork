@@ -79,6 +79,17 @@ const demoPrompts = [
   }
 ];
 
+// Design type display names
+const designTypeNames = {
+  logo: "Logo Design",
+  mobile: "Mobile App",
+  website: "Website",
+  poster: "Poster Design", 
+  "business-card": "Business Card",
+  book: "Book Cover",
+  social: "Social Media"
+};
+
 // State management
 let currentPromptIndex = 0;
 let isTyping = false;
@@ -86,6 +97,10 @@ let typingTimer = null;
 let demoLoop = null;
 let errorCount = 0;
 let continuousAnimations = [];
+let isAutoDemo = true;
+let demoTimeout = null;
+let initialLoadTimeout = null;
+let hasManuallyNavigated = false;
 
 // Elements will be retrieved dynamically to avoid null references
 
@@ -242,15 +257,342 @@ function createSimpleLoop(elements, animProps, duration = 4000) {
 
 
 
+// Stop all current animations and timers
+function stopAllAnimations() {
+  try {
+    // Stop typing animation
+    if (typingTimer) {
+      clearTimeout(typingTimer);
+      typingTimer = null;
+    }
+    
+    // Stop demo timeout
+    if (demoTimeout) {
+      clearTimeout(demoTimeout);
+      demoTimeout = null;
+    }
+    
+    // Stop all continuous animations
+    continuousAnimations.forEach(anim => {
+      if (anim && anim.pause) {
+        anim.pause();
+      }
+    });
+    continuousAnimations = [];
+    
+    // Reset typing state
+    isTyping = false;
+    
+    // Clear any anime.js animations on design elements
+    const animatedElements = [
+      '.mockup-element',
+      '.logo-shape', 
+      '.logo-particle',
+      '.mobile-card',
+      '.poster-header',
+      '.card-front',
+      '.card-back',
+      '.book-cover',
+      '.social-post',
+      '.pattern-dot',
+      '.design-preview',
+      '.design-mockup',
+      '.mobile-frame',
+      '.mobile-header',
+      '.mobile-tab',
+      '.hero-image',
+      '.poster-frame',
+      '.poster-image',
+      '.poster-title',
+      '.poster-subtitle',
+      '.detail-line',
+      '.poster-footer',
+      '.card-logo',
+      '.card-info',
+      '.card-name',
+      '.card-title',
+      '.contact-line',
+      '.card-pattern',
+      '.card-details',
+      '.book-cover',
+      '.book-title',
+      '.book-author',
+      '.book-image',
+      '.book-publisher',
+      '.social-header',
+      '.social-image',
+      '.social-actions',
+      '.social-caption',
+      '.social-button',
+      '.header-element',
+      '.content-element',
+      '.cta-element'
+    ];
+    
+    animatedElements.forEach(selector => {
+      const elements = utils.$(selector);
+      elements.forEach(el => {
+        if (el && el.style) {
+          // Reset all animation-related CSS properties
+          el.style.transform = '';
+          el.style.opacity = '';
+          el.style.scale = '';
+          el.style.rotate = '';
+          el.style.translate = '';
+          el.style.filter = '';
+          el.style.background = '';
+          el.style.boxShadow = '';
+          
+          // Remove any anime.js data attributes
+          if (el.removeAttribute) {
+            const attributes = [...el.attributes].filter(attr => 
+              attr.name.startsWith('data-anime') || 
+              attr.name.startsWith('style')
+            );
+            attributes.forEach(attr => {
+              if (attr.name.startsWith('data-anime')) {
+                el.removeAttribute(attr.name);
+              }
+            });
+          }
+        }
+      });
+    });
+    
+  } catch (error) {
+    logError(error, 'stopAllAnimations');
+  }
+}
+
+// Navigation Functions
+function updateDesignInfo() {
+  try {
+    const $designType = utils.$('#current-design-type')[0];
+    const $currentIndex = utils.$('#current-index')[0];
+    const $totalDesigns = utils.$('#total-designs')[0];
+    
+    if (!$designType || !$currentIndex || !$totalDesigns) return;
+    
+    const currentPrompt = demoPrompts[currentPromptIndex];
+    $designType.textContent = designTypeNames[currentPrompt.type] || 'Unknown Design';
+    $currentIndex.textContent = currentPromptIndex + 1;
+    $totalDesigns.textContent = demoPrompts.length;
+  } catch (error) {
+    logError(error, 'updateDesignInfo');
+  }
+}
+
+function navigateToDesign(index, immediate = false) {
+  try {
+    // Immediately stop all current animations and timers
+    stopAllAnimations();
+    
+    // Mark as manually navigated if this isn't the initial load
+    if (!immediate) {
+      hasManuallyNavigated = true;
+      
+      // Clear initial load timeout to prevent auto demo from starting
+      if (initialLoadTimeout) {
+        clearTimeout(initialLoadTimeout);
+        initialLoadTimeout = null;
+      }
+    }
+    
+    // Pause auto demo when manually navigating
+    if (isAutoDemo && !immediate) {
+      toggleAutoDemo();
+    }
+    
+    currentPromptIndex = index;
+    updateDesignInfo();
+    
+    const prompt = demoPrompts[currentPromptIndex];
+    const $typedText = utils.$('#typed-text')[0];
+    
+    if (!$typedText || !prompt) return;
+    
+    // For manual navigation, show results immediately without typing animation
+    if (!immediate && !isAutoDemo) {
+      // Manual navigation - show immediately
+      $typedText.textContent = prompt.text;
+      setTimeout(() => {
+        animateDesignChange(prompt.design);
+      }, 200);
+    } else if (immediate) {
+      // Initial load - show immediately
+      $typedText.textContent = prompt.text;
+      animateDesignChange(prompt.design);
+    } else {
+      // Auto demo - use typing animation
+      clearText(() => {
+        setTimeout(() => {
+          if (!isAutoDemo) return; // Check if still in auto mode
+          typeText(prompt.text, () => {
+            setTimeout(() => {
+              if (!isAutoDemo) return; // Check again
+              animateDesignChange(prompt.design);
+            }, 800);
+          });
+        }, 300);
+      });
+    }
+  } catch (error) {
+    logError(error, 'navigateToDesign');
+  }
+}
+
+function navigatePrevious() {
+  try {
+    const newIndex = currentPromptIndex === 0 ? demoPrompts.length - 1 : currentPromptIndex - 1;
+    navigateToDesign(newIndex);
+  } catch (error) {
+    logError(error, 'navigatePrevious');
+  }
+}
+
+function navigateNext() {
+  try {
+    const newIndex = (currentPromptIndex + 1) % demoPrompts.length;
+    navigateToDesign(newIndex);
+  } catch (error) {
+    logError(error, 'navigateNext');
+  }
+}
+
+function reloadCurrentDesign() {
+  try {
+    // Stop all current animations first
+    stopAllAnimations();
+    
+    // Pause auto demo if it's running
+    if (isAutoDemo) {
+      toggleAutoDemo();
+    }
+    
+    const prompt = demoPrompts[currentPromptIndex];
+    const $typedText = utils.$('#typed-text')[0];
+    
+    if (!$typedText || !prompt) return;
+    
+    // Show the current prompt text immediately and animate the design
+    $typedText.textContent = prompt.text;
+    setTimeout(() => {
+      animateDesignChange(prompt.design);
+    }, 200);
+    
+  } catch (error) {
+    logError(error, 'reloadCurrentDesign');
+  }
+}
+
+function toggleAutoDemo() {
+  try {
+    isAutoDemo = !isAutoDemo;
+    
+    const $playPauseBtn = utils.$('#play-pause-btn')[0];
+    const $playIcon = utils.$('#play-icon')[0];
+    const $pauseIcon = utils.$('#pause-icon')[0];
+    const $controlLabel = utils.$('#control-label')[0];
+    
+    if (!$playPauseBtn || !$playIcon || !$pauseIcon || !$controlLabel) return;
+    
+    if (isAutoDemo) {
+      // Resume auto demo
+      $playPauseBtn.classList.remove('paused');
+      $playIcon.style.display = 'none';
+      $pauseIcon.style.display = 'block';
+      $controlLabel.textContent = 'Auto Demo';
+      $playPauseBtn.setAttribute('aria-label', 'Pause auto demo');
+      
+      // Clear any existing timeout and restart demo
+      if (demoTimeout) clearTimeout(demoTimeout);
+      demoTimeout = setTimeout(() => {
+        if (isAutoDemo) startDemoLoop();
+      }, 3000);
+    } else {
+      // Pause auto demo
+      $playPauseBtn.classList.add('paused');
+      $playIcon.style.display = 'block';
+      $pauseIcon.style.display = 'none';
+      $controlLabel.textContent = 'Manual';
+      $playPauseBtn.setAttribute('aria-label', 'Resume auto demo');
+      
+      // Clear demo timeout
+      if (demoTimeout) {
+        clearTimeout(demoTimeout);
+        demoTimeout = null;
+      }
+    }
+  } catch (error) {
+    logError(error, 'toggleAutoDemo');
+  }
+}
+
+function setupNavigationControls() {
+  try {
+    const $prevBtn = utils.$('#prev-design')[0];
+    const $nextBtn = utils.$('#next-design')[0];
+    const $playPauseBtn = utils.$('#play-pause-btn')[0];
+    const $designType = utils.$('#current-design-type')[0];
+    
+    if (!$prevBtn || !$nextBtn || !$playPauseBtn) return;
+    
+    // Add event listeners
+    $prevBtn.addEventListener('click', navigatePrevious);
+    $nextBtn.addEventListener('click', navigateNext);
+    $playPauseBtn.addEventListener('click', toggleAutoDemo);
+    
+    // Add reload functionality to design type text
+    if ($designType) {
+      $designType.addEventListener('click', reloadCurrentDesign);
+      $designType.setAttribute('title', 'Click to reload current design');
+      $designType.setAttribute('aria-label', 'Reload current design');
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          navigatePrevious();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          navigateNext();
+          break;
+        case ' ':
+          e.preventDefault();
+          toggleAutoDemo();
+          break;
+      }
+    });
+    
+    // Initialize display
+    updateDesignInfo();
+  } catch (error) {
+    logError(error, 'setupNavigationControls');
+  }
+}
+
 // Initialize everything
 function init() {
   try {
     setupPageAnimations();
     setupBackgroundAnimations();
     setupErrorBubble();
+    setupNavigationControls();
     
-    setTimeout(() => {
-      startDemoLoop();
+    initialLoadTimeout = setTimeout(() => {
+      // Only start auto demo if user hasn't manually navigated
+      if (isAutoDemo && !hasManuallyNavigated) {
+        startDemoLoop();
+      } else if (!hasManuallyNavigated) {
+        // Show first design immediately if not auto and no manual navigation
+        navigateToDesign(0, true);
+      }
+      initialLoadTimeout = null;
     }, 2000);
   } catch (error) {
     logError(error, 'init');
@@ -264,6 +606,7 @@ function setupPageAnimations() {
     const $heroSection = utils.$('.hero-section')[0];
     const $demoContainer = utils.$('.demo-container')[0];
     const $header = utils.$('.header')[0];
+    const $designControls = utils.$('.design-controls')[0];
     
     if (!$heroSection || !$demoContainer || !$header) {
       return;
@@ -284,6 +627,13 @@ function setupPageAnimations() {
       opacity: 0,
       translateY: -10
     });
+
+    if ($designControls) {
+      utils.set($designControls, {
+        opacity: 0,
+        translateY: 10
+      });
+    }
     
     // Create clean entrance timeline
     const entranceTimeline = safeTimeline({
@@ -313,6 +663,16 @@ function setupPageAnimations() {
       duration: 800,
       ease: 'outQuart'
     }, 400);
+
+    // Design controls entrance
+    if ($designControls) {
+      entranceTimeline.add($designControls, {
+        opacity: [0, 1],
+        translateY: [10, 0],
+        duration: 600,
+        ease: 'outQuart'
+      }, 600);
+    }
     
   } catch (error) {
     logError(error, 'setupPageAnimations');
@@ -547,6 +907,12 @@ function typeText(text, onComplete) {
     
     const typeChar = () => {
       try {
+        // Check if typing was interrupted
+        if (!isTyping) {
+          if (onComplete) onComplete();
+          return;
+        }
+        
         if (charIndex < chars.length) {
           $typedText.textContent += chars[charIndex];
           charIndex++;
@@ -601,6 +967,12 @@ function clearText(onComplete) {
     
     const deleteChar = () => {
       try {
+        // Check if typing was interrupted
+        if (!isTyping) {
+          if (onComplete) onComplete();
+          return;
+        }
+        
         if (charIndex >= 0) {
           chars.pop();
           $typedText.textContent = chars.join('');
@@ -1003,22 +1375,35 @@ function startDemoLoop() {
   try {
     const runPrompt = () => {
       try {
+        // Stop if auto demo is disabled
+        if (!isAutoDemo) return;
+        
         const prompt = demoPrompts[currentPromptIndex];
         const $typedText = utils.$('#typed-text')[0];
         
         if (!$typedText) {
-          setTimeout(runPrompt, 3000);
+          demoTimeout = setTimeout(runPrompt, 3000);
           return;
         }
+        
+        // Update the design info display
+        updateDesignInfo();
         
         if ($typedText.textContent) {
           clearText(() => {
             setTimeout(() => {
+              if (!isAutoDemo) return; // Check again after delay
               typeText(prompt.text, () => {
                 setTimeout(() => {
+                  if (!isAutoDemo) return; // Check again after delay
                   animateDesignChange(prompt.design);
-                  currentPromptIndex = (currentPromptIndex + 1) % demoPrompts.length;
-                  setTimeout(runPrompt, 6000);
+                  
+                  // Schedule next prompt with index increment
+                  demoTimeout = setTimeout(() => {
+                    if (!isAutoDemo) return;
+                    currentPromptIndex = (currentPromptIndex + 1) % demoPrompts.length;
+                    runPrompt();
+                  }, 6000);
                 }, 1000);
               });
             }, 500);
@@ -1026,15 +1411,23 @@ function startDemoLoop() {
         } else {
           typeText(prompt.text, () => {
             setTimeout(() => {
+              if (!isAutoDemo) return; // Check again after delay
               animateDesignChange(prompt.design);
-              currentPromptIndex = (currentPromptIndex + 1) % demoPrompts.length;
-              setTimeout(runPrompt, 6000);
+              
+              // Schedule next prompt with index increment
+              demoTimeout = setTimeout(() => {
+                if (!isAutoDemo) return;
+                currentPromptIndex = (currentPromptIndex + 1) % demoPrompts.length;
+                runPrompt();
+              }, 6000);
             }, 1000);
           });
         }
       } catch (error) {
         logError(error, 'runPrompt');
-        setTimeout(runPrompt, 3000);
+        if (isAutoDemo) {
+          demoTimeout = setTimeout(runPrompt, 3000);
+        }
       }
     };
     
@@ -1097,6 +1490,8 @@ function setupButtonAnimations() {
 function cleanup() {
   try {
     if (typingTimer) clearTimeout(typingTimer);
+    if (demoTimeout) clearTimeout(demoTimeout);
+    if (initialLoadTimeout) clearTimeout(initialLoadTimeout);
     if (demoLoop) demoLoop = null;
     continuousAnimations.forEach(anim => {
       if (anim.pause) anim.pause();

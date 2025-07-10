@@ -280,6 +280,132 @@
       51%, 100% { opacity: 0; }
     }
 
+    /* Design Navigation Controls */
+    .design-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+      padding: 0 0.5rem;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .design-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+    }
+
+    .nav-btn:active {
+      transform: translateY(0);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .nav-btn:disabled:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+    }
+
+    .design-info {
+      text-align: center;
+      min-width: 180px;
+    }
+
+    .design-type {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      margin: -0.25rem -0.5rem 0.25rem -0.5rem;
+    }
+
+    .design-type:hover {
+      color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-1px);
+    }
+
+    .design-type:active {
+      transform: translateY(0);
+    }
+
+    .design-counter {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .demo-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text-primary);
+    }
+
+    .control-btn.paused {
+      background: rgba(255, 107, 107, 0.15);
+      border-color: rgba(255, 107, 107, 0.3);
+      color: #ff6b6b;
+    }
+
+    .control-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      min-width: 70px;
+    }
+
     /* Design Preview */
     .design-preview {
       background: rgba(0, 0, 0, 0.5);
@@ -1078,6 +1204,49 @@
         margin-top: 1rem;
       }
 
+      .design-controls {
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 0;
+      }
+
+      .design-nav {
+        gap: 1rem;
+      }
+
+      .nav-btn {
+        width: 36px;
+        height: 36px;
+      }
+
+      .design-info {
+        min-width: 140px;
+      }
+
+      .design-type {
+        font-size: 0.9rem;
+        padding: 0.375rem 0.75rem;
+        margin: -0.375rem -0.75rem 0.25rem -0.75rem;
+      }
+
+      .design-counter {
+        font-size: 0.8rem;
+      }
+
+      .demo-controls {
+        gap: 0.5rem;
+      }
+
+      .control-btn {
+        width: 32px;
+        height: 32px;
+      }
+
+      .control-label {
+        font-size: 0.8rem;
+      }
+
       .mockup-poster {
         width: 220px;
         height: 280px;
@@ -1379,6 +1548,43 @@
               <span class="submit-icon">↗</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Design Navigation Controls -->
+      <div class="design-controls">
+        <div class="design-nav">
+          <button id="prev-design" class="nav-btn nav-prev" aria-label="Previous design">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15,18 9,12 15,6"></polyline>
+            </svg>
+          </button>
+          
+          <div class="design-info">
+            <div class="design-type" id="current-design-type">Logo Design</div>
+            <div class="design-counter">
+              <span id="current-index">1</span> / <span id="total-designs">7</span>
+            </div>
+          </div>
+          
+          <button id="next-design" class="nav-btn nav-next" aria-label="Next design">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="demo-controls">
+          <button id="play-pause-btn" class="control-btn" aria-label="Pause auto demo">
+            <svg id="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            <svg id="play-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+              <polygon points="5,3 19,12 5,21"></polygon>
+            </svg>
+          </button>
+          <span class="control-label" id="control-label">Auto Demo</span>
         </div>
       </div>
 
