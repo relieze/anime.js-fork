@@ -94,8 +94,7 @@ npm run open-examples
 
 ### 📖 **Deep Dive**
 The actualize-landing example includes comprehensive documentation:
-- **[Complete Feature Overview](examples/actualize-landing/README.md)** - Full project documentation
-- **[Animation Audit](examples/actualize-landing/ANIMATION-AUDIT.md)** - Technical optimization process
+- **[Complete Feature Overview](examples/actualize-landing/README.md)** - Full project documentation and technical details
 
 This example serves as both a demonstration of anime.js capabilities and a template for building sophisticated animated web applications.
 

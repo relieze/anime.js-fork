@@ -39,10 +39,9 @@ npm run open-examples
 ### **Project Structure**
 ```
 actualize-landing/
-├── index.html              # Main landing page
-├── index.js                # Animation logic (1,126 lines)
-├── README.md               # This documentation
-└── ANIMATION-AUDIT.md      # Technical optimization guide
+├── index.html              # Main landing page (1,413 lines)
+├── index.js                # Animation logic (1,126 lines)  
+└── README.md               # Complete documentation
 ```
 
 ## 🎨 **Features Breakdown**
@@ -145,9 +144,8 @@ window.actualizeErrors
 - **Timeline Management**: Coordinated animations using anime.js timelines
 - **State Management**: Careful tracking of animation and interaction states
 
-## 📚 **Documentation Files**
+## 📚 **Documentation**
 
-- **[ANIMATION-AUDIT.md](ANIMATION-AUDIT.md)** - Detailed technical optimization process showing how we streamlined from 800+ to 300 lines of code
 - **[Main Repository README](../../README.md)** - Anime.js library documentation and other examples
 
 ## 🎯 **Use as a Template**
