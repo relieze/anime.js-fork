@@ -74,6 +74,31 @@ animate('.square', {
 </tr>
 </table>
 
+## Featured Example: Actualize AI Design Landing Page
+
+This repository includes a comprehensive real-world example demonstrating anime.js v4 capabilities in a production-ready application. The **Actualize Landing Page** showcases:
+
+### 🎨 **What It Demonstrates**
+- **Professional UI Animations**: Elegant entrance effects, typewriter animations, and smooth transitions
+- **Dynamic Design Mockups**: 7 different design types (logo, mobile, website, poster, business card, book, social media)
+- **Modern Design Patterns**: Dark theme with gradient backgrounds, glass morphism effects, and subtle motion
+- **Performance Optimization**: Streamlined from 800+ lines to 300 lines of animation code
+- **Mobile Responsiveness**: Fully optimized for all screen sizes and touch devices
+- **Error Handling**: Production-ready error management with visual debugging tools
+
+### 🚀 **Quick Start**
+```bash
+npm run open-examples
+# Navigate to "actualize-landing" in your browser
+```
+
+### 📖 **Deep Dive**
+The actualize-landing example includes comprehensive documentation:
+- **[Complete Feature Overview](examples/actualize-landing/README.md)** - Full project documentation
+- **[Animation Audit](examples/actualize-landing/ANIMATION-AUDIT.md)** - Technical optimization process
+
+This example serves as both a demonstration of anime.js capabilities and a template for building sophisticated animated web applications.
+
 ## V4 Documentation
 
 The full documentation is available [here](https://animejs.com/documentation).
