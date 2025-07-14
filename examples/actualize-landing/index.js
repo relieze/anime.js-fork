@@ -584,16 +584,16 @@ function init() {
     setupErrorBubble();
     setupNavigationControls();
     
-    initialLoadTimeout = setTimeout(() => {
-      // Only start auto demo if user hasn't manually navigated
+    // Start immediately instead of waiting 2 seconds
+    // This prevents the jarring delay and visual glitches
+    setTimeout(() => {
       if (isAutoDemo && !hasManuallyNavigated) {
         startDemoLoop();
       } else if (!hasManuallyNavigated) {
-        // Show first design immediately if not auto and no manual navigation
+        // Show first design immediately
         navigateToDesign(0, true);
       }
-      initialLoadTimeout = null;
-    }, 2000);
+    }, 800); // Reduced from 2000ms to 800ms
   } catch (error) {
     logError(error, 'init');
   }
@@ -702,7 +702,42 @@ function setupBackgroundAnimations() {
     logError(error, 'setupBackgroundAnimations');
   }
 }
-// Create dynamic mockup based on design type
+
+function createWebsiteMockupHTML(designConfig) {
+  const { primaryColor, accentColor } = designConfig;
+  return `
+    <div class="mockup-browser">
+      <div class="browser-header">
+        <div class="browser-dot dot-red"></div>
+        <div class="browser-dot dot-yellow"></div>
+        <div class="browser-dot dot-green"></div>
+      </div>
+      <div class="browser-content">
+        <div class="website-hero mockup-element" style="background: ${primaryColor};">
+          <div class="website-hero-title"></div>
+          <div class="website-hero-subtitle"></div>
+          <div class="website-hero-cta" style="background: ${accentColor};"></div>
+        </div>
+        <div class="website-features">
+          <div class="feature-card mockup-element">
+            <div class="feature-icon" style="background: ${accentColor};"></div>
+            <div class="feature-title"></div>
+          </div>
+          <div class="feature-card mockup-element">
+            <div class="feature-icon" style="background: ${accentColor};"></div>
+            <div class="feature-title"></div>
+          </div>
+          <div class="feature-card mockup-element">
+            <div class="feature-icon" style="background: ${accentColor};"></div>
+            <div class="feature-title"></div>
+          </div>
+        </div>
+        <div class="website-footer mockup-element"></div>
+      </div>
+    </div>
+  `;
+}
+
 function createMockupHTML(designType) {
   const mockups = {
     logo: `
@@ -712,9 +747,6 @@ function createMockupHTML(designType) {
             <div class="logo-shape logo-primary"></div>
             <div class="logo-shape logo-secondary"></div>
             <div class="logo-shape logo-accent"></div>
-            <div class="logo-particles">
-              ${Array.from({length: 8}, (_, i) => `<div class="logo-particle logo-particle-${i}"></div>`).join('')}
-            </div>
           </div>
           <div class="logo-text">
             <div class="logo-line logo-line-1"></div>
@@ -768,45 +800,33 @@ function createMockupHTML(designType) {
         </div>
       </div>
     `,
-    website: `
-      <div class="mockup-browser">
-        <div class="browser-header">
-          <div class="browser-dot dot-red"></div>
-          <div class="browser-dot dot-yellow"></div>
-          <div class="browser-dot dot-green"></div>
-        </div>
-        <div class="browser-content">
-          <div class="mockup-element header-element"></div>
-          <div class="content-sections">
-            <div class="mockup-element content-element" style="width: 85%;"></div>
-            <div class="mockup-element content-element" style="width: 70%;"></div>
-            <div class="mockup-element content-element" style="width: 95%;"></div>
-          </div>
-          <div class="mockup-element cta-element"></div>
-        </div>
-      </div>
-    `,
     poster: `
       <div class="mockup-poster">
         <div class="poster-frame">
-          <div class="poster-header">
-            <div class="header-pattern"></div>
-          </div>
-          <div class="poster-image">
-            <div class="image-overlay"></div>
-          </div>
-          <div class="poster-text">
-            <div class="poster-title"></div>
-            <div class="poster-subtitle"></div>
-            <div class="poster-details">
-              <div class="detail-line"></div>
-              <div class="detail-line"></div>
+          <div class="poster-pattern"></div>
+          <div class="poster-hero">
+            <div class="music-icon">
+              <svg viewBox="0 0 32 32" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#fff3"/>
+                <path d="M22 8v11.5a3.5 3.5 0 1 1-2-3.15V12h-6v7.5a3.5 3.5 0 1 1-2-3.15V10a2 2 0 0 1 2-2h8z" fill="#f39c12"/>
+              </svg>
             </div>
           </div>
-          <div class="poster-footer">
-            <div class="footer-elements">
-              <div class="footer-element"></div>
-              <div class="footer-element"></div>
+          <div class="poster-content">
+            <div class="poster-headline bold-headline">
+              <div class="headline-main"></div>
+              <div class="headline-accent"></div>
+            </div>
+            <div class="poster-event-info">
+              <div class="event-date"></div>
+              <div class="event-venue"></div>
+            </div>
+            <div class="poster-details">
+              <div class="detail-item detail-1"></div>
+              <div class="detail-item detail-2"></div>
+            </div>
+            <div class="poster-cta">
+              <div class="cta-button bold-cta"></div>
             </div>
           </div>
         </div>
@@ -814,42 +834,68 @@ function createMockupHTML(designType) {
     `,
     'business-card': `
       <div class="mockup-business-card">
-        <div class="card-front">
-          <div class="card-logo">
-            <div class="logo-symbol"></div>
+        <div class="card-front dark-card">
+          <div class="card-logo-mark large-logo">
+            <svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="20" fill="#fff2"/>
+              <path d="M13 27v-9a7 7 0 0 1 14 0v9" stroke="#f39c12" stroke-width="2.5" fill="none"/>
+              <circle cx="20" cy="20" r="4" fill="#f39c12"/>
+            </svg>
           </div>
-          <div class="card-info">
-            <div class="card-name"></div>
-            <div class="card-title"></div>
-            <div class="card-contact">
-              <div class="contact-line"></div>
-              <div class="contact-line"></div>
-            </div>
-          </div>
+          <div class="card-accent-shape front-accent"></div>
         </div>
-        <div class="card-back">
-          <div class="card-pattern">
-            <div class="pattern-elements">
-              ${Array.from({length: 6}, (_, i) => `<div class="pattern-dot pattern-dot-${i}"></div>`).join('')}
-            </div>
+        <div class="card-back dark-card">
+          <div class="card-accent-shape back-accent"></div>
+          <div class="contact-placeholders" style="margin-bottom: 1.2rem;">
+            <div class="contact-placeholder contact-1"></div>
+            <div class="contact-placeholder contact-2"></div>
+            <div class="contact-placeholder contact-3"></div>
           </div>
-          <div class="card-details"></div>
+          <div class="card-logo-mark small-logo">
+            <svg viewBox="0 0 32 32" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="16" fill="#fff2"/>
+              <path d="M10 22v-8a6 6 0 0 1 12 0v8" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <circle cx="16" cy="16" r="3" fill="#f39c12"/>
+            </svg>
+          </div>
         </div>
       </div>
     `,
     book: `
-      <div class="mockup-book">
-        <div class="book-cover">
-          <div class="book-spine"></div>
-          <div class="book-front">
-            <div class="book-title">
-              <div class="title-text"></div>
-            </div>
-            <div class="book-author"></div>
-            <div class="book-image">
-              <div class="image-decoration"></div>
-            </div>
-            <div class="book-publisher"></div>
+      <div class="mockup-book" style="display: flex; align-items: center; justify-content: center; min-height: 320px;">
+        <div style="display: flex; align-items: center;">
+          <!-- Spine -->
+          <div class="book-spine-minimal" style="width: 18px; height: 240px; border-radius: 10px 0 0 10px; background: linear-gradient(180deg, #6366f1 0%, #a5b4fc 100%); margin-right: -8px; box-shadow: 6px 0 18px 0 rgba(99,102,241,0.22), 0 0 0 2px #fff4, 8px 0 18px -4px #0002; position: relative;">
+            <!-- Stronger highlight -->
+            <div style="position: absolute; left: 3px; top: 20px; width: 4px; height: 70px; border-radius: 2px; background: linear-gradient(180deg, #fff9, #6366f1 80%); opacity: 0.85;"></div>
+            <!-- Subtle right edge shadow -->
+            <div style="position: absolute; right: 0; top: 0; width: 5px; height: 100%; border-radius: 0 8px 8px 0; background: linear-gradient(90deg, transparent 60%, #0002 100%); opacity: 0.7;"></div>
+            <!-- Faint shadow cast onto cover -->
+            <div style="position: absolute; right: -6px; top: 0; width: 12px; height: 100%; border-radius: 0 10px 10px 0; background: linear-gradient(90deg, #6366f1 0%, transparent 100%); opacity: 0.08;"></div>
+          </div>
+          <!-- Cover -->
+          <div class="book-cover-minimal" style="width: 170px; height: 240px; border-radius: 10px; background: radial-gradient(ellipse at 60% 30%, #e0f2fe 60%, #fafdff 100%), linear-gradient(135deg, #fafdff 60%, #eaf1fa 100%); box-shadow: 0 12px 40px rgba(0,0,0,0.22), 0 0 0 8px #fff1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            <!-- Glow/vignette -->
+            <div style="position: absolute; inset: 0; border-radius: 10px; background: radial-gradient(circle at 50% 60%, #38bdf8 0%, transparent 70%); opacity: 0.18;"></div>
+            <!-- Sci-fi art block -->
+            <div style="position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 100px; height: 68px; border-radius: 16px; background: linear-gradient(135deg, #22d3ee 0%, #6366f1 100%); box-shadow: 0 4px 24px #38bdf855;"></div>
+            <!-- Planets / stars -->
+            <div style="position: absolute; top: 38px; left: 44px; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #a5b4fc 60%, #38bdf8 100%); opacity: 0.85;"></div>
+            <div style="position: absolute; top: 130px; left: 120px; width: 12px; height: 12px; border-radius: 50%; background: #bae6fd; opacity: 0.8;"></div>
+            <div style="position: absolute; top: 180px; left: 80px; width: 8px; height: 8px; border-radius: 50%; background: #f0abfc; opacity: 0.7;"></div>
+            <div style="position: absolute; top: 100px; left: 30px; width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0.7;"></div>
+            <div style="position: absolute; top: 60px; left: 110px; width: 7px; height: 7px; border-radius: 50%; background: #f472b6; opacity: 0.7;"></div>
+            <!-- Additional planets/stars -->
+            <div style="position: absolute; top: 50px; left: 120px; width: 10px; height: 10px; border-radius: 50%; background: #fef9c3; opacity: 0.7;"></div>
+            <div style="position: absolute; top: 200px; left: 40px; width: 5px; height: 5px; border-radius: 50%; background: #a7f3d0; opacity: 0.7;"></div>
+            <!-- More visible orbital arc -->
+            <svg style="position: absolute; top: 120px; left: 30px;" width="110" height="40"><ellipse cx="55" cy="20" rx="50" ry="16" fill="none" stroke="#bae6fd" stroke-width="2.2" opacity="0.38"/></svg>
+            <!-- Beam / rocket trail -->
+            <div style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 3px; height: 38px; border-radius: 2px; background: linear-gradient(180deg, #fff 60%, #38bdf8 100%); box-shadow: 0 0 8px #fff8; opacity: 0.8;"></div>
+            <!-- Minimal rocket silhouette -->
+            <svg style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);" width="22" height="38" viewBox="0 0 22 38"><polygon points="11,0 21,30 1,30" fill="#6366f1" opacity="0.92"/><rect x="8.5" y="30" width="5" height="7" rx="2.5" fill="#38bdf8" opacity="0.85"/></svg>
+            <!-- Foreground blocky structure silhouette (more visible) -->
+            <svg style="position: absolute; bottom: 0; left: 0;" width="170" height="32"><rect x="0" y="18" width="40" height="14" fill="#a5b4fc" opacity="0.38"/><rect x="50" y="24" width="24" height="8" fill="#6366f1" opacity="0.28"/><rect x="90" y="20" width="30" height="12" fill="#38bdf8" opacity="0.22"/></svg>
           </div>
         </div>
       </div>
@@ -860,30 +906,59 @@ function createMockupHTML(designType) {
           <div class="social-header">
             <div class="social-avatar">
               <div class="avatar-ring"></div>
+              <div class="avatar-img"></div>
             </div>
-            <div class="social-username"></div>
+            <div class="social-user-bar"></div>
           </div>
-          <div class="social-image">
-            <div class="image-effects">
-              <div class="effect-overlay"></div>
-            </div>
+          <div class="social-image-area">
+            <svg class="social-image-svg" viewBox="0 0 160 120" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+              <defs>
+                <linearGradient id="bgGrad" x1="0" y1="0" x2="160" y2="120" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#ffe2c0"/>
+                  <stop offset="1" stop-color="#fecbb0"/>
+                </linearGradient>
+                <radialGradient id="faceGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                  <stop offset="0%" stop-color="#f9d0b4"/>
+                  <stop offset="100%" stop-color="#f7bfa2"/>
+                </radialGradient>
+                <linearGradient id="neckGrad" x1="0" y1="0" x2="0" y2="18" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#f7c7a3"/>
+                  <stop offset="1" stop-color="#eeb38a"/>
+                </linearGradient>
+                <linearGradient id="torsoGrad" x1="0" y1="0" x2="160" y2="40" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#f7c7a3"/>
+                  <stop offset="1" stop-color="#eeb38a"/>
+                </linearGradient>
+              </defs>
+              <!-- BG -->
+              <rect x="0" y="0" width="160" height="120" rx="18" fill="url(#bgGrad)"/>
+              <!-- Torso/shoulders: wide ellipse for rounded shoulders -->
+              <ellipse cx="80" cy="98" rx="44" ry="18" fill="url(#torsoGrad)"/>
+              <!-- V-neck/collar (optional, subtle) -->
+              <polygon points="80,98 87,110 73,110" fill="#fff" opacity="0.13"/>
+              <!-- Neck: small vertical rounded rect -->
+              <rect x="70" y="74" width="20" height="18" rx="7" fill="url(#neckGrad)"/>
+              <!-- Head: large circle -->
+              <ellipse cx="80" cy="62" rx="22" ry="22" fill="url(#faceGrad)"/>
+            </svg>
+            <div class="social-image-overlay"></div>
           </div>
           <div class="social-actions">
-            <div class="social-button btn-1"></div>
-            <div class="social-button btn-2"></div>
-            <div class="social-button btn-3"></div>
-          </div>
-          <div class="social-caption">
-            <div class="caption-lines">
-              <div class="caption-line"></div>
-              <div class="caption-line"></div>
+            <div class="social-action social-like" title="Like">
+              <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 17s-5-3.33-5-7.5A3.5 3.5 0 0 1 10 6a3.5 3.5 0 0 1 5 3.5C15 13.67 10 17 10 17z" stroke="#ff6b6b" stroke-width="1.5" fill="#ff6b6b22"/></svg>
+            </div>
+            <div class="social-action social-comment" title="Comment">
+              <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 15v-1a7 7 0 1 1 3.5 2.5L4 17z" stroke="#34495e" stroke-width="1.5" fill="#34495e22"/></svg>
+            </div>
+            <div class="social-action social-share" title="Share">
+              <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 8.5V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-3.5M10 10l5-5m0 0l-5-5m5 5H5" stroke="#4facfe" stroke-width="1.5" fill="#4facfe22"/></svg>
             </div>
           </div>
+          <div class="social-caption-bar"></div>
         </div>
       </div>
     `
   };
-  
   return mockups[designType] || mockups.website;
 }
 
@@ -1017,7 +1092,12 @@ function animateDesignChange(designConfig) {
       return;
     }
     
-    $designMockup.innerHTML = createMockupHTML(designConfig.mockupType);
+    // Use the new function for website
+    if (designConfig.mockupType === 'website') {
+      $designMockup.innerHTML = createWebsiteMockupHTML(designConfig);
+    } else {
+      $designMockup.innerHTML = createMockupHTML(designConfig.mockupType);
+    }
     
     // Container entrance animation
     safeAnimate($designPreview, {
@@ -1045,6 +1125,10 @@ function animateDesignChange(designConfig) {
       delay: 400
     });
     
+    if (designConfig.mockupType === 'book') {
+      setBookCoverInitialStates();
+    }
+    
     setTimeout(() => {
       animateSpecificDesign(designConfig);
     }, 600);
@@ -1054,81 +1138,72 @@ function animateDesignChange(designConfig) {
   }
 }
 
-// Logo animation with organic movements
+// Minimal logo preview animation - shows AI understands logo concepts
 function animateLogoDesign(primaryColor, accentColor) {
   try {
     const $logoShapes = utils.$('.logo-shape');
-    const $logoParticles = utils.$('.logo-particle');
     const $logoLines = utils.$('.logo-line');
     const $logoVariants = utils.$('.logo-variant');
     
-    // Main logo entrance with organic flow
+    if (!$logoShapes.length) return;
+    
+    // Clean, minimal entrance that says "I understand logo design"
     const logoTimeline = safeTimeline({
       defaults: { ease: 'outExpo' }
     });
     
-    // Animate main shapes with dynamic movement
+    // Logo shapes appear with professional confidence
     logoTimeline.add($logoShapes, {
       opacity: [0, 1],
-      scale: [0, 1.2, 1],
-      rotate: [0, utils.random(-30, 30), 0],
-      duration: 1000,
-      delay: stagger(150, { from: 'center' })
-    });
-    
-    // Animate particles with organic pattern
-    logoTimeline.add($logoParticles, {
-      opacity: [0, 1],
-      scale: [0, utils.random(1, 2)],
-      translateX: () => utils.random(-20, 20),
-      translateY: () => utils.random(-20, 20),
-      rotate: () => utils.random(0, 360),
-      duration: 800,
-      delay: stagger(80, { from: 'random' })
-    }, '-=600');
-    
-    // Animate text lines
-    logoTimeline.add($logoLines, {
-      opacity: [0, 1],
-      scaleX: [0, 1],
+      scale: [0.8, 1],
+      translateY: [20, 0],
       duration: 600,
       delay: stagger(100)
-    }, '-=400');
+    });
     
-    // Color animations
+    // Apply colors to show AI understands brand identity
     logoTimeline.add('.logo-primary', {
       background: primaryColor,
-      duration: 800
-    }, '-=800');
+      duration: 400
+    }, '-=400');
     
     logoTimeline.add('.logo-accent', {
       background: accentColor,
-      duration: 600
-    }, '-=600');
-    
-    // Create continuous particle animation
-    createSimpleLoop($logoParticles, {
-      rotate: [0, 360],
-      scale: [1, 1.5, 1],
-      opacity: [0.5, 1, 0.5],
-      translateX: utils.random(-10, 10),
-      translateY: utils.random(-10, 10)
-    }, 4000);
-    
-    // Animate variants with breathing effect
-    logoTimeline.add($logoVariants, {
-      opacity: [0, 1],
-      scale: [0.5, 1],
-      rotateY: [-90, 0],
-      duration: 600,
-      delay: stagger(100, { from: 'last' })
+      duration: 400
     }, '-=200');
     
-    // Add continuous breathing to main shapes
-    createSimpleLoop($logoShapes, {
-      scale: [1, 1.05, 1],
-      filter: ['brightness(1)', 'brightness(1.1)', 'brightness(1)']
-    }, 3000);
+    // Text elements appear to show typography understanding
+    if ($logoLines.length > 0) {
+      logoTimeline.add($logoLines, {
+        opacity: [0, 1],
+        scaleX: [0, 1],
+        transformOrigin: 'left center',
+        duration: 500,
+        delay: stagger(80)
+      }, '-=200');
+    }
+    
+    // Variants show the AI can create logo variations  
+    if ($logoVariants.length > 0) {
+      logoTimeline.add($logoVariants, {
+        opacity: [0, 1],
+        scale: [0.7, 1],
+        duration: 400,
+        delay: stagger(100)
+      }, '-=100');
+    }
+    
+    // Subtle continuous animation - professional, not distracting
+    setTimeout(() => {
+      // Very gentle breathing for main logo
+      safeAnimate($logoShapes, {
+        scale: [1, 1.02, 1],
+        duration: 3000,
+        ease: 'inOutSine',
+        loop: true
+      });
+      
+    }, 800);
     
   } catch (error) {
     logError(error, 'animateLogoDesign');
@@ -1138,45 +1213,56 @@ function animateLogoDesign(primaryColor, accentColor) {
 // Mobile animation with interactive elements
 function animateMobileDesign(primaryColor, accentColor) {
   try {
-    const $mobileElements = utils.$('.mobile-header, .mobile-card, .mobile-tab, .hero-image');
-    
+    // Phone frame is already animated by animateDesignChange - only animate internal elements
     const mobileTimeline = safeTimeline({
-      defaults: { ease: 'outBack(1.7)' }
+      defaults: { ease: 'outQuart' }
     });
     
-    mobileTimeline.add('.mobile-frame', {
-      opacity: [0, 1],
-      scale: [0.8, 1],
-      rotateY: [-15, 0],
-      duration: 800
-    });
-    
-    mobileTimeline.add($mobileElements, {
-      opacity: [0, 1],
-      translateY: [20, 0],
-      scale: [0.9, 1],
-      duration: 500,
-      delay: stagger(100, { ease: 'outQuart' })
-    }, '-=400');
-    
+    // 1. Pink navigation bar (child of mobile-header)
     mobileTimeline.add('.mobile-nav-bar', {
-      background: primaryColor,
+      opacity: [0, 1],
       scaleX: [0, 1],
-      duration: 600
-    }, '-=300');
+      duration: 400
+    });
     
+    // 2. Status bar area (separate from nav bar to avoid conflict)
+    mobileTimeline.add('.mobile-status-bar', {
+      opacity: [0, 1],
+      translateY: [10, 0],
+      duration: 300
+    }, '-=150');
+    
+    // 3. Hero section (image + text together)
+    mobileTimeline.add('.mobile-hero', {
+      opacity: [0, 1],
+      translateY: [15, 0],
+      scale: [0.95, 1],
+      duration: 400
+    }, '-=100');
+    
+    // 4. Content cards (animated as group, no individual conflicts)
+    mobileTimeline.add('.mobile-card', {
+      opacity: [0, 1],
+      translateY: [15, 0],
+      scale: [0.95, 1],
+      duration: 350,
+      delay: stagger(80) // Stagger only the cards
+    }, '-=50');
+    
+    // 5. Bottom tabs - ONLY background color, no scale/opacity conflicts
     mobileTimeline.add('.mobile-tab', {
       background: accentColor,
-      scale: [0.8, 1],
-      duration: 400,
-      delay: stagger(80)
-    }, '-=200');
+      duration: 300,
+      delay: stagger(60)
+    }, '-=100');
     
-    // Add floating animation to cards
-    createSimpleLoop(utils.$('.mobile-card'), {
-      translateY: [0, -5, 0],
-      boxShadow: ['0 5px 15px rgba(0,0,0,0.1)', '0 8px 25px rgba(0,0,0,0.2)', '0 5px 15px rgba(0,0,0,0.1)']
-    }, 3000);
+    // 6. Delayed floating animation - wait for all entrance to complete
+    setTimeout(() => {
+      createSimpleLoop(utils.$('.mobile-card'), {
+        translateY: [0, -3, 0],
+        duration: 4000
+      });
+    }, 1200); // Longer delay to ensure no conflicts
     
   } catch (error) {
     logError(error, 'animateMobileDesign');
@@ -1186,36 +1272,65 @@ function animateMobileDesign(primaryColor, accentColor) {
 // Animation functions for other design types
 function animatePosterDesign(primaryColor, accentColor) {
   try {
-    const $posterElements = utils.$('.poster-header, .poster-image, .poster-title, .poster-subtitle');
-    
     safeTimeline({
       defaults: { ease: 'outExpo' }
+    })
+    .add('.poster-pattern', {
+      opacity: [0, 0.18],
+      duration: 600
     })
     .add('.poster-frame', {
       opacity: [0, 1],
       scale: [0.9, 1],
       rotateX: [-10, 0],
       duration: 800
-    })
-    .add($posterElements, {
+    }, '-=400')
+    .add('.music-icon', {
+      opacity: [0, 1],
+      scale: [0.5, 1.2, 1],
+      duration: 700
+    }, '-=500')
+    .add('.poster-hero', {
       opacity: [0, 1],
       scale: [0.8, 1],
-      translateY: [30, 0],
-      duration: 600,
-      delay: stagger(120)
-    }, '-=400')
-    .add('.poster-header', {
-      background: primaryColor,
+      translateY: [20, 0],
+      duration: 700
+    }, '-=600')
+    .add('.headline-main', {
+      opacity: [0, 1],
+      scale: [0.7, 1.1, 1],
+      translateX: [-20, 0],
       duration: 600
-    }, '-=400')
-    .add('.poster-image', {
-      background: accentColor,
-      duration: 600
-    }, '-=300');
+    }, '-=300')
+    .add('.headline-accent', {
+      opacity: [0, 1],
+      scale: [0.7, 1.1, 1],
+      translateX: [20, 0],
+      duration: 500
+    }, '-=200')
+    .add('.event-date, .event-venue', {
+      opacity: [0, 1],
+      scale: [0.9, 1],
+      translateY: [15, 0],
+      duration: 500,
+      delay: stagger(100)
+    }, '-=200')
+    .add('.detail-item', {
+      opacity: [0, 1],
+      scale: [0.8, 1],
+      translateX: [10, 0],
+      duration: 400,
+      delay: stagger(80)
+    }, '-=100')
+    .add('.cta-button', {
+      opacity: [0, 1],
+      scale: [0, 1.2, 1],
+      duration: 500
+    }, '-=100');
   } catch (error) {
     logError(error, 'animatePosterDesign');
   }
-  }
+}
 
 function animateBusinessCardDesign(primaryColor, accentColor) {
   try {
@@ -1227,26 +1342,187 @@ function animateBusinessCardDesign(primaryColor, accentColor) {
       rotateY: [-90, 0],
       duration: 800
     })
+    .add('.card-logo-mark.large-logo', {
+      opacity: [0, 1],
+      scale: [0.5, 1.1, 1],
+      duration: 500
+    }, '-=600')
+    .add('.card-accent-shape.front-accent', {
+      opacity: [0, 0.7],
+      scale: [0.8, 1],
+      duration: 400
+    }, '-=350')
     .add('.card-back', {
       opacity: [0, 1],
       rotateY: [90, 0],
       duration: 800
     }, '-=600')
-    .add('.card-logo', {
-      background: primaryColor,
-      scale: [0, 1.2, 1],
-      rotate: [0, 15, 0],
-      duration: 600
-    }, '-=400')
-    .add('.pattern-dot', {
+    .add('.card-accent-shape.back-accent', {
+      opacity: [0, 0.7],
+      scale: [0.8, 1],
+      duration: 400
+    }, '-=600')
+    .add('.card-logo-mark.small-logo', {
       opacity: [0, 1],
-      scale: [0, 1],
-      background: accentColor,
+      scale: [0.5, 1.1, 1],
+      duration: 500
+    }, '-=400')
+    .add('.contact-placeholder', {
+      opacity: [0, 1],
+      translateX: [-10, 0],
       duration: 300,
-      delay: stagger(50, { from: 'random' })
-    }, '-=200');
+      delay: stagger(80)
+    }, '-=300');
   } catch (error) {
     logError(error, 'animateBusinessCardDesign');
+  }
+}
+
+// --- Book Cover Minimal Animation Utilities ---
+/**
+ * Sets all Book Cover features to their hidden/initial state for animation.
+ * Ensures no double fade or stutter when animating in.
+ */
+function setBookCoverInitialStates() {
+  const $spine = utils.$('.book-spine-minimal')[0];
+  const $cover = utils.$('.book-cover-minimal')[0];
+  if (!$spine || !$cover) return;
+  // Hide spine
+  utils.set($spine, { opacity: 0, translateX: -30 });
+  // Hide cover
+  utils.set($cover, { opacity: 0, scale: 0.92 });
+  // Children
+  const $children = Array.from($cover.children);
+  const $glow = $children[0];
+  const $artBlock = $children[1];
+  const $planets = $children.slice(2, 8);
+  const $orbit = $children[8];
+  const $beam = $children[9];
+  const $rocket = $children[10];
+  const $structure = $children[11];
+  // Glow
+  if ($glow) utils.set($glow, { opacity: 0 });
+  // Art block
+  if ($artBlock) utils.set($artBlock, { opacity: 0, scale: 0.8 });
+  // Planets
+  $planets.forEach(p => utils.set(p, { opacity: 0, scale: 0.7 }));
+  // Orbit
+  if ($orbit && $orbit.tagName === 'svg') {
+    const $ellipse = $orbit.querySelector('ellipse');
+    if ($ellipse) {
+      $ellipse.style.opacity = 0;
+      $ellipse.style.strokeDasharray = $ellipse.getTotalLength ? $ellipse.getTotalLength() : 200;
+      $ellipse.style.strokeDashoffset = $ellipse.style.strokeDasharray;
+    }
+  }
+  // Beam
+  if ($beam) utils.set($beam, { opacity: 0, scaleY: 0.2 });
+  // Rocket
+  if ($rocket && $rocket.tagName === 'svg') utils.set($rocket, { opacity: 0, translateY: 30, scale: 0.7 });
+  // Structure
+  if ($structure && $structure.tagName === 'svg') utils.set($structure, { opacity: 0, translateY: 20 });
+}
+
+/**
+ * Animates the minimal sci-fi Book Cover preview.
+ * Targets dynamically generated elements in the .mockup-book/.book-cover-minimal structure.
+ * Animates: spine, cover, art block, planets, orbit, beam, rocket, and blocky structure in a staggered, elegant sequence.
+ */
+function animateBookDesignMinimal() {
+  try {
+    const $spine = utils.$('.book-spine-minimal')[0];
+    const $cover = utils.$('.book-cover-minimal')[0];
+    if (!$spine || !$cover) return;
+    // Find children by order and style (since no unique classes)
+    const $children = Array.from($cover.children);
+    const $glow = $children[0];
+    const $artBlock = $children[1];
+    const $planets = $children.slice(2, 8);
+    const $orbit = $children[8]; // SVG
+    const $beam = $children[9];
+    const $rocket = $children[10]; // SVG
+    const $structure = $children[11]; // SVG
+    // Timeline for entrance sequence
+    const tl = safeTimeline({ defaults: { ease: 'outExpo' } });
+    // 1. Spine: slide/fade in from left
+    tl.add($spine, {
+      opacity: [0, 1],
+      translateX: [-30, 0],
+      duration: 500
+    });
+    // 2. Cover: fade/scale in
+    tl.add($cover, {
+      opacity: [0, 1],
+      scale: [0.92, 1],
+      duration: 500
+    }, '-=300');
+    // 3. Glow: fade in
+    if ($glow) tl.add($glow, {
+      opacity: [0, 0.18],
+      duration: 400
+    }, '-=250');
+    // 4. Art block: pop/scale in
+    if ($artBlock) tl.add($artBlock, {
+      opacity: [0, 1],
+      scale: [0.8, 1],
+      duration: 400
+    }, '-=200');
+    // 5. Planets/stars: staggered fade/scale in
+    if ($planets.length) tl.add($planets, {
+      opacity: [0, 1],
+      scale: [0.7, 1],
+      duration: 350,
+      delay: stagger(80)
+    }, '-=200');
+    // 6. Orbit: draw/fade in
+    if ($orbit && $orbit.tagName === 'svg') {
+      const $ellipse = $orbit.querySelector('ellipse');
+      if ($ellipse) {
+        const len = $ellipse.getTotalLength ? $ellipse.getTotalLength() : 200;
+        $ellipse.style.strokeDasharray = len;
+        $ellipse.style.strokeDashoffset = len;
+        safeAnimate($ellipse, {
+          strokeDashoffset: [len, 0],
+          opacity: [0, 0.38],
+          duration: 500
+        });
+      }
+    }
+    // 7. Beam: grow/fade in (height/opacity)
+    if ($beam) {
+      $beam.style.transform += ' scaleY(0.2)';
+      safeAnimate($beam, {
+        opacity: [0, 0.8],
+        scaleY: [0.2, 1],
+        duration: 350
+      });
+    }
+    // 8. Rocket: slide/scale in from bottom
+    if ($rocket && $rocket.tagName === 'svg') {
+      safeAnimate($rocket, {
+        opacity: [0, 1],
+        translateY: [30, 0],
+        scale: [0.7, 1],
+        duration: 400
+      });
+    }
+    // 9. Blocky structure: slide/fade in from bottom
+    if ($structure && $structure.tagName === 'svg') {
+      safeAnimate($structure, {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 400
+      });
+    }
+    // Optional: gentle floating for planets after entrance
+    setTimeout(() => {
+      createSimpleLoop($planets, {
+        translateY: [0, -3, 0],
+        duration: 4000
+      });
+    }, 1200);
+  } catch (error) {
+    logError(error, 'animateBookDesignMinimal');
   }
 }
 
@@ -1279,33 +1555,82 @@ function animateBookDesign(primaryColor, accentColor) {
 
 function animateSocialDesign(primaryColor, accentColor) {
   try {
-    const $socialElements = utils.$('.social-header, .social-image, .social-actions, .social-caption');
-    
-    safeTimeline({
-      defaults: { ease: 'outQuart' }
-    })
-    .add('.social-post', {
+    const $avatar = utils.$('.social-avatar')[0];
+    const $userBar = utils.$('.social-user-bar')[0];
+    const $imageArea = utils.$('.social-image-area')[0];
+    const $actions = utils.$('.social-actions')[0];
+    const $actionBtns = utils.$('.social-action');
+    const $captionBar = utils.$('.social-caption-bar')[0];
+    const $card = utils.$('.social-post')[0];
+
+    // Set initial states for all features (hidden)
+    if ($avatar) utils.set($avatar, { opacity: 0, translateY: 20 });
+    if ($userBar) utils.set($userBar, { opacity: 0, translateY: 20 });
+    if ($imageArea) utils.set($imageArea, { opacity: 0, scale: 0.95 });
+    if ($actions) utils.set($actions, { opacity: 1 }); // container always visible
+    if ($actionBtns.length) Array.from($actionBtns).forEach(btn => utils.set(btn, { opacity: 0, scale: 0.7 }));
+    if ($captionBar) utils.set($captionBar, { opacity: 0, translateY: 10 });
+
+    // Card entrance (features hidden)
+    if ($card) utils.set($card, { opacity: 0, scale: 0.9, translateY: 30 });
+    const timeline = safeTimeline({ defaults: { ease: 'outQuart' } });
+    timeline.add($card, {
       opacity: [0, 1],
       scale: [0.9, 1],
       translateY: [30, 0],
       duration: 600
-    })
-    .add($socialElements, {
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 500,
-      delay: stagger(120)
-    }, '-=300')
-    .add('.social-image', {
-      background: primaryColor,
-      duration: 600
-    }, '-=300')
-    .add('.social-button', {
-      background: accentColor,
-      scale: [0, 1.1, 1],
-      duration: 400,
-      delay: stagger(80)
-    }, '-=200');
+    });
+
+    // Avatar and user bar
+    if ($avatar && $userBar) {
+      timeline.add([$avatar, $userBar], {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 400,
+        delay: stagger(80)
+      }, '-=300');
+    }
+
+    // Media area (SVG selfie)
+    if ($imageArea) {
+      timeline.add($imageArea, {
+        opacity: [0, 1],
+        scale: [0.95, 1],
+        duration: 500
+      }, '-=200');
+    }
+
+    // Actions (staggered pop)
+    if ($actions && $actionBtns.length) {
+      timeline.add($actionBtns, {
+        opacity: [0, 1],
+        scale: [0.7, 1.15, 1],
+        duration: 350,
+        delay: stagger(90)
+      }, '-=200');
+    }
+
+    // Caption bar
+    if ($captionBar) {
+      timeline.add($captionBar, {
+        opacity: [0, 1],
+        translateY: [10, 0],
+        duration: 350
+      }, '-=150');
+    }
+
+    // Optional: gentle breathing animation for SVG selfie
+    setTimeout(() => {
+      const $svg = utils.$('.social-image-svg')[0];
+      if ($svg) {
+        safeAnimate($svg, {
+          scale: [1, 1.025, 1],
+          duration: 3400,
+          ease: 'inOutSine',
+          loop: true
+        });
+      }
+    }, 900);
   } catch (error) {
     logError(error, 'animateSocialDesign');
   }
@@ -1313,26 +1638,47 @@ function animateSocialDesign(primaryColor, accentColor) {
 
 function animateWebsiteDesign(primaryColor, accentColor) {
   try {
-    const $elements = utils.$('.mockup-element');
-    
-    safeTimeline({
+    // Animate hero section
+    const websiteTimeline = safeTimeline({
       defaults: { ease: 'outExpo' }
-    })
-    .add($elements, {
-      opacity: [0, 1],
-      translateX: [-30, 0],
-      scale: [0.95, 1],
-      duration: 600,
-      delay: stagger(100)
-    })
-    .add('.header-element', {
-      background: primaryColor,
-      duration: 600
-    }, '-=300')
-    .add('.cta-element', {
-      background: accentColor,
-      duration: 400
-    }, '-=200');
+    });
+    websiteTimeline
+      .add('.website-hero', {
+        opacity: [0, 1],
+        translateY: [30, 0],
+        scale: [0.95, 1],
+        duration: 600
+      })
+      .add('.website-hero-title', {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        scale: [0.95, 1],
+        duration: 400
+      }, '-=300')
+      .add('.website-hero-subtitle', {
+        opacity: [0, 1],
+        translateY: [15, 0],
+        scale: [0.95, 1],
+        duration: 350
+      }, '-=250')
+      .add('.website-hero-cta', {
+        opacity: [0, 1],
+        scale: [0.9, 1],
+        duration: 350
+      }, '-=200')
+      .add('.feature-card', {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        scale: [0.95, 1],
+        duration: 400,
+        delay: stagger(120)
+      }, '-=100')
+      .add('.website-footer', {
+        opacity: [0, 1],
+        translateY: [10, 0],
+        duration: 300
+      }, '-=100');
+    // No setTimeout color application needed
   } catch (error) {
     logError(error, 'animateWebsiteDesign');
   }
@@ -1357,7 +1703,7 @@ function animateSpecificDesign(designConfig) {
         animateBusinessCardDesign(primaryColor, accentColor);
         break;
       case 'book':
-        animateBookDesign(primaryColor, accentColor);
+        animateBookDesignMinimal();
         break;
       case 'social':
         animateSocialDesign(primaryColor, accentColor);
@@ -1370,7 +1716,7 @@ function animateSpecificDesign(designConfig) {
   }
 }
 
-// Demo loop with transitions
+// Simplified demo loop with better timing
 function startDemoLoop() {
   try {
     const runPrompt = () => {
@@ -1382,51 +1728,51 @@ function startDemoLoop() {
         const $typedText = utils.$('#typed-text')[0];
         
         if (!$typedText) {
-          demoTimeout = setTimeout(runPrompt, 3000);
+          demoTimeout = setTimeout(runPrompt, 1500);
           return;
         }
         
         // Update the design info display
         updateDesignInfo();
         
+        // Simplified sequence: clear -> type -> animate -> next
+        const runSequence = () => {
         if ($typedText.textContent) {
           clearText(() => {
-            setTimeout(() => {
-              if (!isAutoDemo) return; // Check again after delay
+              if (!isAutoDemo) return;
               typeText(prompt.text, () => {
+                if (!isAutoDemo) return;
                 setTimeout(() => {
-                  if (!isAutoDemo) return; // Check again after delay
                   animateDesignChange(prompt.design);
-                  
-                  // Schedule next prompt with index increment
-                  demoTimeout = setTimeout(() => {
-                    if (!isAutoDemo) return;
-                    currentPromptIndex = (currentPromptIndex + 1) % demoPrompts.length;
-                    runPrompt();
-                  }, 6000);
-                }, 1000);
+                  scheduleNext();
+                }, 600); // Reduced from 1000ms
               });
-            }, 500);
           });
         } else {
           typeText(prompt.text, () => {
+              if (!isAutoDemo) return;
             setTimeout(() => {
-              if (!isAutoDemo) return; // Check again after delay
               animateDesignChange(prompt.design);
+                scheduleNext();
+              }, 600); // Reduced from 1000ms
+            });
+          }
+        };
               
-              // Schedule next prompt with index increment
+        const scheduleNext = () => {
+          if (!isAutoDemo) return;
               demoTimeout = setTimeout(() => {
                 if (!isAutoDemo) return;
                 currentPromptIndex = (currentPromptIndex + 1) % demoPrompts.length;
                 runPrompt();
-              }, 6000);
-            }, 1000);
-          });
-        }
+          }, 4500); // Reduced from 6000ms
+        };
+        
+        runSequence();
       } catch (error) {
         logError(error, 'runPrompt');
         if (isAutoDemo) {
-          demoTimeout = setTimeout(runPrompt, 3000);
+          demoTimeout = setTimeout(runPrompt, 2000);
         }
       }
     };
@@ -1486,21 +1832,68 @@ function setupButtonAnimations() {
   }
 }
 
-// Cleanup
+// Enhanced cleanup to prevent memory leaks
 function cleanup() {
   try {
-    if (typingTimer) clearTimeout(typingTimer);
-    if (demoTimeout) clearTimeout(demoTimeout);
-    if (initialLoadTimeout) clearTimeout(initialLoadTimeout);
+    // Clear all timers
+    if (typingTimer) {
+      clearTimeout(typingTimer);
+      typingTimer = null;
+    }
+    if (demoTimeout) {
+      clearTimeout(demoTimeout);
+      demoTimeout = null;
+    }
+    
+    // Stop demo loop
     if (demoLoop) demoLoop = null;
+    isAutoDemo = false;
+    
+    // Stop all continuous animations
     continuousAnimations.forEach(anim => {
-      if (anim.pause) anim.pause();
+      try {
+        if (anim && typeof anim.pause === 'function') {
+          anim.pause();
+        }
+      } catch (e) {
+        // Ignore errors when stopping animations
+      }
     });
-    continuousAnimations = [];
+    continuousAnimations.length = 0; // Clear array efficiently
+    
+    // Reset state
+    isTyping = false;
+    hasManuallyNavigated = false;
+    
   } catch (error) {
     logError(error, 'cleanup');
   }
 }
+
+// Animated dots for 'Generating design...' status
+let genDotsInterval = null;
+function startGenDotsAnimation() {
+  const dots = ['', '.', '..', '...'];
+  let idx = 0;
+  const el = document.getElementById('gen-dots');
+  if (!el) return;
+  if (genDotsInterval) clearInterval(genDotsInterval);
+  genDotsInterval = setInterval(() => {
+    el.textContent = dots[idx];
+    idx = (idx + 1) % dots.length;
+  }, 400);
+}
+function stopGenDotsAnimation() {
+  if (genDotsInterval) clearInterval(genDotsInterval);
+  genDotsInterval = null;
+  const el = document.getElementById('gen-dots');
+  if (el) el.textContent = '...';
+}
+// Start animation on page load (or whenever status is shown)
+document.addEventListener('DOMContentLoaded', () => {
+  startGenDotsAnimation();
+});
+// Optionally, you can call startGenDotsAnimation() and stopGenDotsAnimation() when the status indicator is shown/hidden in your app logic.
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -1508,10 +1901,77 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
     setupCursorBlink();
     setupButtonAnimations();
+    setupResponsiveHandlers();
   } catch (error) {
     logError(error, 'DOMContentLoaded');
   }
 });
+
+// Setup responsive and visibility handlers
+function setupResponsiveHandlers() {
+  try {
+    let resizeTimeout;
+    
+    // Handle window resize - restart animations after resize stops
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        try {
+          // Stop current animations
+          stopAllAnimations();
+          
+          // Restart key animations after resize
+          setupPageAnimations();
+          setupBackgroundAnimations();
+          setupCursorBlink();
+          
+          // If we have a current design, refresh it
+          if (!isTyping && currentPromptIndex >= 0) {
+            const currentDesign = demoPrompts[currentPromptIndex];
+            if (currentDesign) {
+              setTimeout(() => {
+                animateDesignChange(currentDesign.design);
+              }, 200);
+            }
+          }
+        } catch (error) {
+          logError(error, 'resize handler');
+        }
+      }, 300); // Wait 300ms after resize stops
+    });
+    
+    // Handle tab visibility changes
+    document.addEventListener('visibilitychange', () => {
+      try {
+        if (document.hidden) {
+          // Page is hidden (user switched tabs)
+          if (isAutoDemo) {
+            // Pause auto demo but don't disable it
+            if (demoTimeout) {
+              clearTimeout(demoTimeout);
+              demoTimeout = null;
+            }
+          }
+        } else {
+          // Page is visible again
+          if (isAutoDemo && !demoTimeout && !isTyping) {
+            // Restart auto demo if it was running
+            setTimeout(() => {
+              if (isAutoDemo && !hasManuallyNavigated) {
+                startDemoLoop();
+              }
+            }, 500);
+          }
+        }
+      } catch (error) {
+        logError(error, 'visibilitychange handler');
+      }
+    });
+    
+  } catch (error) {
+    logError(error, 'setupResponsiveHandlers');
+  }
+}
 
 window.addEventListener('beforeunload', cleanup);
 
