@@ -1,0 +1,14 @@
+{
+    "builds": [
+      {
+        "src": "examples/actualize-landing/**",
+        "use": "@vercel/static"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "/examples/actualize-landing/$1"
+      }
+    ]
+  }
